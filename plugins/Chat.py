@@ -23,7 +23,7 @@ async def _(event: Event):
 
 
 def Chat(raw_message: str):
-    with open('./json/Chat.json', 'r', encoding='utf-8') as jsonfile:
+    with open('./plugins/Config/Chat.json', 'r', encoding='utf-8') as jsonfile:
         data = json.load(jsonfile)
 
     for item in data:

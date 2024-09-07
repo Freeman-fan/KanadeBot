@@ -2,6 +2,7 @@ import requests
 import sqlite3
 from sqlite3 import Error as DatabaseError
 import time
+import os
 
 
 # 类：抓取
@@ -24,7 +25,7 @@ class RequestMae:
         self.priceMax = priceMax
         self.inuse = inuse
         self.data = {
-            "keyword": keyword,
+            "keyword": keyword[0],
             "itemConditionId": None,
             "page": "1",
             "categoryId": [],
@@ -43,10 +44,14 @@ class RequestMae:
     # 创建数据库
     def Create_Database(self):
         # 新建数据库
+        db_path = f".\Database\mer_{self.name}.db"
+        self.db_path = db_path
+        # if os.path.exists(self.db_path):
+        #     # 如果存在，删除数据库文件
+        #     os.remove(self.db_path)
+            
         try:
-            db_path = f"{self.name}.db"
-            conn = sqlite3.connect(db_path)
-            self.db_path = db_path
+            conn = sqlite3.connect(db_path, check_same_thread=False)
             self.conn = conn
         except DatabaseError as e:
             print(f"创建数据库错误：{str(e)}")
@@ -75,6 +80,7 @@ class RequestMae:
             INSERT OR IGNORE INTO items (mNum, status, name, jpprice, firstPhoto, isSand) VALUES (?, ?, ?, ?, ?, ?);
             """
             data = response.json()
+            cur = self.conn.cursor()
             for item in data["data"]["list"]:
                 mNum = item["id"]
                 status = item["status"]
@@ -82,25 +88,23 @@ class RequestMae:
                 jpprice = item["price"]
                 firstphoto = item["thumbnails"][0]
                 try:
-                    cur = self.conn.cursor()
                     cur.execute(
                         sql_add_item, (mNum, status, name, jpprice, firstphoto, 0)
                     )
                     self.conn.commit()
                 except DatabaseError as e:
                     print(f"写入数据库错误：{str(e)}")
-                finally:
-                    if cur:
-                        cur.close()
+
+            if cur:
+                cur.close()
 
     # 初始化数据库
     def Initialize_Database(self):
         try:
-            conn = self.conn
-            cur = conn.cursor()
+            cur = self.conn.cursor()
             sql = f"UPDATE items SET isSand = 1"
             cur.execute(sql)
-            conn.commit()
+            self.conn.commit()
         except DatabaseError as e:
             print(f"初始化数据库错误：{str(e)}")
         finally:
@@ -114,4 +118,30 @@ class RequestMae:
         response = requests.post(url, data=data)
         return response
 
-
+    # 查询未发送记录
+    def GetUnsandData(self):
+        UnsandData = []
+        try:
+            # 查询所有isSand值为0的记录
+            cur = self.conn.cursor()
+            cur.execute("SELECT * FROM items WHERE isSand = 0")
+            # 遍历查询结果
+            for row in cur.fetchall():
+                m_num, status, name, jpprice, firstPhoto, isSand = row
+                if isSand == 0:
+                    # 更新isSand值为1
+                    update_sql = "UPDATE items SET isSand = 1 WHERE mNum = ?"
+                    cur.execute(update_sql, (m_num,))
+                    self.conn.commit()
+                    data = [m_num, name, jpprice, firstPhoto]
+                    UnsandData.append(data)
+            return UnsandData
+        except DatabaseError as e:
+            print(str(e))
+            return []
+        except Exception as e:
+            print(str(e))
+            return []
+        finally:
+            if cur:
+                cur.close()

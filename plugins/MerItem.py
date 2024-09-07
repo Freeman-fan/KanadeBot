@@ -16,7 +16,7 @@ async def MerGood(session: CommandSession):
         raw_message = session.event.raw_message
         match = re.search(r'(?<!\d)\d{11}(?!\d)', raw_message)
         if match:
-            goodID, name, _, price, mae_price, status, imagelist = await GetMer(mNum=f'm{match.group()}')
+            goodID, name, _, price, mae_price, status, imagelist = await GetMerItem(mNum=f'm{match.group()}')
             k_price = int(price) *0.052
             text = f"{goodID}\n{name}\n{price:.0f}y  人工{k_price:.2f}r  机切{mae_price}r\n状态：{'在售' if status == 'on_sale' else '已售出'}"
             message = raw_message.split()
