@@ -1,0 +1,9 @@
+/images
+/__pycache__
+*/__pycache__
+*/*/__pycache__
+/plugins/Config
+/plugins/plugins_old
+
+
+test.ipynb
