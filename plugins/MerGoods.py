@@ -94,7 +94,7 @@ async def _():
                         jpprice = "?"
                         maePrice = "?"
                         kPrice = "?"
-                    message = f"【{request.name}】\n{mNum}\n{name}\n{jpprice}y | {kPrice}r | {maePrice}r [CQ:image,file={firstphoto}]"
+                    message = f"{mNum}\n{name}\n{jpprice}y | {kPrice}r | {maePrice}r [CQ:image,file={firstphoto}] https://www.maetown.cn/wap/#/pages/base/gDetail/gDetail?gId={mNum}"
                     if request.target_type == "private":
                         for id in request.target_id:
                             await bot.send_private_msg(user_id=id, message=message)
