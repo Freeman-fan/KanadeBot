@@ -7,6 +7,8 @@ __plugin_name__ = '入群欢迎'
 
 @on_notice('group_increase')
 async def Welcome(session: NoticeSession):
+    if session.event.group_id != 937806799:
+        return
     await session.send('欢迎新谷东！本群常开切煤、日相卡业务，也有日韩通贩，详情看公告。有需要切煤可以直接把链接甩憂一乘或泛进中举~')
     time.sleep(0.1)
     await session.send('新谷东记得改cn+自推——\n不改也行，不改的话拼煤看见你推就不会艾特你')
