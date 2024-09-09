@@ -18,7 +18,9 @@ async def _(event: Event):
         return
     
     chat_reply = Chat(raw_message=raw_message)
-    message = chat_reply if chat_reply is not None else "我在。"
+    message = chat_reply
+    if chat_reply == None and raw_message.strip() == f'[CQ:at,qq={event.self_id}]':
+        message = '我在。'
     await bot.send(event=event, message=message)
 
 
