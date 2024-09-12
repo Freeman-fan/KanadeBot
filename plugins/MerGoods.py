@@ -1,6 +1,6 @@
 import aiocqhttp
 import nonebot
-from nonebot import on_startup, on_websocket_connect
+from nonebot import on_startup
 
 import time
 import json
@@ -44,7 +44,9 @@ async def _():
             priceMin = item.get("priceMin")
             priceMax = item.get("priceMax")
             inuse = item.get("inuse")
-            print(f"{name}:已成功加载配置")
+            print(
+                f"{name}:已成功加载配置，关键词{keyword}，状态：{'已启用'if inuse == True else '未启用'}"
+            )
             requesemae = RequestMae(
                 name=name,
                 target_type=target_type,
@@ -67,7 +69,7 @@ async def updateMaeRate():
     maeRate = await GetMaeRate()
 
 
-# 每秒抓取并推送
+# 抓取并推送
 @nonebot.scheduler.scheduled_job("interval", seconds=10)
 async def _():
     bot = nonebot.get_bot()
@@ -76,6 +78,7 @@ async def _():
             request.Getdata()
             UnsandData = request.GetUnsandData()
             if UnsandData != []:
+                messages = ''
                 for data in UnsandData:
                     mNum, name, jpprice, firstphoto = data
                     match = re.match(
@@ -88,17 +91,19 @@ async def _():
                         query_param = match.group(2)
                         # 构造新的链接
                         firstphoto = f"https://mercdn.maetown.cn/item/detail/orig/photos/{product_id}_1.jpg?{query_param}"
-                    kPrice = round(jpprice * 0.052, 2)
+                    kPrice = round(jpprice * 0.053, 2)
                     maePrice = round((jpprice + 50) * maeRate, 2)
                     if jpprice == 9999999:
                         jpprice = "?"
                         maePrice = "?"
                         kPrice = "?"
-                    message = f"{mNum}\n{name}\n{jpprice}y | {kPrice}r | {maePrice}r [CQ:image,file={firstphoto}] https://www.maetown.cn/wap/#/pages/base/gDetail/gDetail?gId={mNum}"
-                    if request.target_type == "private":
-                        for id in request.target_id:
-                            await bot.send_private_msg(user_id=id, message=message)
-                    elif request.target_type == "group":
-                        for id in request.target_id:
-                            await bot.send_group_msg(group_id=id, message=message)
-                    time.sleep(0.1)
+                    message = f"{mNum}\n{name}\n{jpprice}y | {kPrice}r | {maePrice}r [CQ:image,file={firstphoto}]https://www.maetown.cn/wap/#/pages/base/gDetail/gDetail?gId={mNum}"
+                    messages+=message
+                    if data != UnsandData[-1]:  # 检查当前数据是否不是最后一条数据
+                        messages += '\n—————————\n'
+                if request.target_type == "private":
+                    for id in request.target_id:
+                        await bot.send_private_msg(user_id=id, message=messages)
+                elif request.target_type == "group":
+                    for id in request.target_id:
+                        await bot.send_group_msg(group_id=id, message=messages)
