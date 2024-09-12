@@ -1,20 +1,6 @@
 import requests
 import os
 
-async def save_image(photo_url, product_id, index):
-    photo_filename = f"{product_id}_{index}.jpg"
-    photo_response = requests.get(photo_url)
-    try:
-        if photo_response.status_code == 200:
-            current_dir = os.getcwd()
-            photo_abspath = os.path.join(current_dir, photo_filename)
-            with open(photo_abspath, 'wb') as f:
-                f.write(photo_response.content)
-        else:
-            print(f"Failed to retrieve image, status code: {photo_response.status_code}")
-    except Exception as e:
-        pass
-
 
 async def GetMerItem(mNum: str):
     api_url = 'https://www.maetown.cn/Mobile/Mercari/GoodsDetail?id=' + mNum
@@ -29,21 +15,29 @@ async def GetMerItem(mNum: str):
             product_price_cny = data.get('data', {}).get('priceCNY')
             product_status = data.get('data', {}).get('status')
             product_photos = data.get('data', {}).get('photos', [])
-            seller_name = data.get('data', {}).get('seller', {}).get('name')
+            product_comment = data.get('data', {}).get('comment', [])
+            seller_id = data.get('data', {}).get('seller', {}).get('id')
+            
         except Exception as e:
             print(e)
             return Exception
         
-        # 提取响应数据
-        product_id = data.get('data', {}).get('id')
-        product_photos = data.get('data', {}).get('photos', [])
-
-        # 循环遍历图片URL列表，并为每张图片使用序号
         imagelist = []
         for index, photo_url in enumerate(product_photos, start=1):
-            # imagelist.append(await save_image(photo_url, product_id, index))
             imagelist.append(photo_url)
-        return(product_id, product_name, product_description, product_price, product_price_cny, product_status, imagelist)
+
+        comment_list = []
+        for comment in product_comment:
+            user_id = comment.get('user', {}).get('id')
+            user_name = comment.get('user', {}).get('name')
+            message = comment.get('message')
+            if user_id == seller_id:
+                user_name = user_name + '(卖家)'
+            comment_add = [user_name, message]
+            comment_list.append(comment_add)
+                
+
+        return(product_id, product_name, product_description, product_price, product_price_cny, product_status, imagelist, comment_list)
             
     else:
         print(f"Failed to retrieve data, status code: {response.status_code}")

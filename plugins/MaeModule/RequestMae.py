@@ -72,13 +72,36 @@ class RequestMae:
         except DatabaseError as e:
             print(f"创建表错误：{str(e)}")
 
-    # 获取数据
+    # # 获取数据
+    # def Getdata(self):
+    #     response = self.RequesePost()
+    #     if response.status_code == 200:
+    #         sql_add_item = """
+    #         INSERT OR IGNORE INTO items (mNum, status, name, jpprice, firstPhoto, isSand) VALUES (?, ?, ?, ?, ?, ?);
+    #         """
+    #         data = response.json()
+    #         cur = self.conn.cursor()
+    #         for item in data["data"]["list"]:
+    #             mNum = item["id"]
+    #             status = item["status"]
+    #             name = item["name"]
+    #             jpprice = item["price"]
+    #             firstphoto = item["thumbnails"][0]
+    #             try:
+    #                 cur.execute(
+    #                     sql_add_item, (mNum, status, name, jpprice, firstphoto, 0)
+    #                 )
+    #                 self.conn.commit()
+    #             except DatabaseError as e:
+    #                 print(f"写入数据库错误：{str(e)}")
+
+    #         if cur:
+    #             cur.close()
+
+
     def Getdata(self):
         response = self.RequesePost()
         if response.status_code == 200:
-            sql_add_item = """
-            INSERT OR IGNORE INTO items (mNum, status, name, jpprice, firstPhoto, isSand) VALUES (?, ?, ?, ?, ?, ?);
-            """
             data = response.json()
             cur = self.conn.cursor()
             for item in data["data"]["list"]:
@@ -88,13 +111,25 @@ class RequestMae:
                 jpprice = item["price"]
                 firstphoto = item["thumbnails"][0]
                 try:
-                    cur.execute(
-                        sql_add_item, (mNum, status, name, jpprice, firstphoto, 0)
-                    )
-                    self.conn.commit()
+                    # 检查是否存在相同mNum的记录
+                    cur.execute("SELECT jpprice FROM items WHERE mNum = ?", (mNum,))
+                    existing_record = cur.fetchone()
+                    if existing_record:
+                        existing_jpprice = existing_record[0]
+                        # 如果jpprice不同，则更新记录
+                        if existing_jpprice != jpprice:
+                            cur.execute("""
+                                UPDATE items SET status = ?, name = ?, jpprice = ?, firstPhoto = ?, isSand = 0 WHERE mNum = ?;
+                            """, (status, name, jpprice, firstphoto, mNum))
+                            self.conn.commit()
+                    else:
+                        # 如果不存在相同mNum的记录，则插入新记录
+                        cur.execute("""
+                            INSERT INTO items (mNum, status, name, jpprice, firstPhoto, isSand) VALUES (?, ?, ?, ?, ?, 0);
+                        """, (mNum, status, name, jpprice, firstphoto))
+                        self.conn.commit()
                 except DatabaseError as e:
-                    print(f"写入数据库错误：{str(e)}")
-
+                    print(f"数据库操作错误：{str(e)}")
             if cur:
                 cur.close()
 
