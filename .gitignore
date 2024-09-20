@@ -1,10 +1,11 @@
 /images
 /__pycache__
 /Database
+/log
+/plugins/Config
+
 */__pycache__
 */*/__pycache__
-/plugins/Config
-/plugins/plugins_old
-
+*/*/*/__pycache__
 
 test.ipynb

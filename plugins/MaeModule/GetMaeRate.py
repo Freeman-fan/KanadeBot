@@ -20,12 +20,9 @@ async def GetMaeRate():
     }
     try:
         response = requests.get(url, headers=headers)
-        # 检查响应状态码
         response.raise_for_status()
-        # 解析响应内容为JSON
         data = response.json()
-        # 提取data字段的值
-        rate = data.get('data', 0.052)  # 使用默认值0，以防data字段不存在
+        rate = data.get('data', 0.052)
     except Exception as e:
         rate = 0.052
     return rate
