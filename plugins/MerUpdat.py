@@ -5,9 +5,9 @@ from nonebot import on_startup, on_command, CommandSession
 import time
 import json
 
-from plugins.MaeModule.GetMerItem import GetMerItem
-from plugins.MerGoods import maeRate
-from plugins.MaeModule.GetMerUpdata import GetMerUpdate
+from plugins.Modules.GetMerItem import GetMerItem
+from plugins.MerGoodsSearch import maeRate
+from plugins.Modules.GetMerUpdata import GetMerUpdate
 
 
 __plugin_name__ = "监控mer商品更新信息"

@@ -8,8 +8,8 @@ import re
 import os
 import glob
 
-from plugins.MaeModule.RequestMae import RequestMae
-from plugins.MaeModule.GetMaeRate import GetMaeRate
+from plugins.Modules.RequestMae import RequestMae
+from plugins.Modules.GetMaeRate import GetMaeRate
 
 
 __plugin_name__ = "爬取mer商品并推送"
@@ -91,7 +91,7 @@ async def _():
                         query_param = match.group(2)
                         # 构造新的链接
                         firstphoto = f"https://mercdn.maetown.cn/item/detail/orig/photos/{product_id}_1.jpg?{query_param}"
-                    kPrice = round(jpprice * 0.053, 2)
+                    kPrice = round(jpprice * 0.052, 2)
                     maePrice = round((jpprice + 50) * maeRate, 2)
                     if jpprice == 9999999:
                         jpprice = "?"

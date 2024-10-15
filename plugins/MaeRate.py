@@ -1,5 +1,5 @@
 from nonebot import on_command, CommandSession
-from plugins.MaeModule.GetMaeRate import GetMaeRate
+from plugins.Modules.GetMaeRate import GetMaeRate
 
 
 __plugin_name__ = '获取机切汇率'
