@@ -8,22 +8,18 @@ import re
 import os
 import glob
 
+from plugins.Rate import rate
 from plugins.Modules.RequestMae import RequestMae
-from plugins.Modules.GetMaeRate import GetMaeRate
 
 
 __plugin_name__ = "爬取mer商品并推送"
 
 requests = []
-maeRate = 0
 
 
 # 初始化
 @on_startup
 async def _():
-    global maeRate
-    maeRate = await GetMaeRate()
-
     # 构建匹配所有 'mer_*.db' 文件的路径模式
     pattern = "./Database/mer_*.db"
 
@@ -62,13 +58,6 @@ async def _():
         print(str(e))
 
 
-# 每小时更新一次mae汇率
-@nonebot.scheduler.scheduled_job("interval", hours=1)
-async def updateMaeRate():
-    global maeRate
-    maeRate = await GetMaeRate()
-
-
 # 抓取并推送
 @nonebot.scheduler.scheduled_job("interval", seconds=10)
 async def _():
@@ -92,7 +81,7 @@ async def _():
                         # 构造新的链接
                         firstphoto = f"https://mercdn.maetown.cn/item/detail/orig/photos/{product_id}_1.jpg?{query_param}"
                     kPrice = round(jpprice * 0.052, 2)
-                    maePrice = round((jpprice + 50) * maeRate, 2)
+                    maePrice = round((jpprice + 50) * rate.maeRate, 2)
                     if jpprice == 9999999:
                         jpprice = "?"
                         maePrice = "?"
