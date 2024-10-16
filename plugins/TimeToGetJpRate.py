@@ -4,6 +4,9 @@ from nonebot import on_websocket_connect
 from plugins.CustomClass.response import FuncResponse
 from plugins.Modules.JpRate import GetJpRate, JpRateResponse
 
+
+__plugin_name__ = "汇率定时更新"
+
 Jprate = 0.05
 
 
