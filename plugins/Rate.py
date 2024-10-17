@@ -15,6 +15,7 @@ class Rate:
 
 
 rate = Rate()
+bot = nonebot.get_bot()
 
 
 # 初始化汇率值
@@ -30,21 +31,18 @@ async def _():
 
 
 # 定时获得日元汇率值并更新
-@nonebot.scheduler.scheduled_job("cron", hour="*")
+@nonebot.scheduler.scheduled_job("cron", minute="*")
 async def _():
-    global Jprate
-    bot = nonebot.get_bot()
-
     response = GetJpRate()
     if response.response_code == 0:
         rate_update = response.response_rate
         date_update = response.response_date
-        if rate_update != Jprate:
+        if rate_update != rate.jpRate:
             await bot.send_private_msg(
                 user_id=501079827,
                 message=f"日元汇率变动：{rate_update}\n更新时间{date_update}",
             )
-            Jprate = rate_update
+            rate.jpRate = rate_update
     elif response.response_code == 1:
         await bot.send_private_msg(
             user_id=501079827, message=f"日元汇率请求失败\n{response.response_data}"
@@ -54,10 +52,9 @@ async def _():
 # 定时获得mae汇率值并更新
 @nonebot.scheduler.scheduled_job("cron", hour="*")
 async def _():
-    global maeRate
     maerate_response = await GetMaeRate()
     if maerate_response.response_code == 0:
-        maeRate = maerate_response.response_rate
+        rate.maeRate = maerate_response.response_rate
     elif maerate_response.response_code == 1:
         bot = nonebot.get_bot()
         await bot.send_private_msg(
