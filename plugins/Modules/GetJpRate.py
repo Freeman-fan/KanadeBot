@@ -1,5 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
+from typing import Union
+
 from plugins.CustomClass.response import FuncResponse
 
 
@@ -11,7 +13,22 @@ class JpRateResponse(FuncResponse):
         self.response_date = response_date
 
 
-def GetJpRate():
+class JpRate():
+    def __init__(self, jpRate: float = 0.05, date: str = ""):
+        self.jpRate = jpRate
+        self.date = date
+
+    def UpdateRate(self) -> FuncResponse:
+        response = GetJpRate()
+        if response.response_code == 0:
+            self.jpRate = float(response.response_rate)
+            self.date = str(response.response_date)
+            return FuncResponse(0, "")
+        elif response.response_code == 1:
+            return FuncResponse(1, response.response_data)
+
+
+def GetJpRate() -> Union[FuncResponse, JpRateResponse]:
     try:
         url = "https://www.boc.cn/sourcedb/whpj/"
         response = requests.get(url)

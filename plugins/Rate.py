@@ -1,17 +1,39 @@
 import nonebot
-from nonebot import on_startup
+from nonebot import on_startup, on_command, CommandSession
 
-from plugins.Modules.JpRate import GetJpRate
-from plugins.Modules.GetMaeRate import GetMaeRate
+from plugins.Modules.GetJpRate import JpRate
+from plugins.Modules.GetMaeRate import MaeRate
+from plugins.CustomClass.response import FuncResponse
 
 
 __plugin_name__ = "汇率"
 
 
-class Rate:
-    def __init__(self, Jprate: float = 0.05, maeRate: float = 0.052):
-        self.jpRate = Jprate
-        self.maeRate = maeRate
+class Rate(JpRate, MaeRate):
+    def __init__(self, jpRate: float = 0.05, maeRate: float = 0.052, date: str = ""):
+        JpRate.__init__(self, jpRate, date)
+        MaeRate.__init__(self, maeRate)
+
+    # 更新所有汇率
+    async def UpdateRate(self) -> FuncResponse:
+        jpUpdate = JpRate.UpdateRate(self)
+        maeUpdate = MaeRate.UpdateRate(self)
+        if jpUpdate.response_code == 0 and maeUpdate.response_code == 0:
+            return FuncResponse(0, "")
+        else:
+            return FuncResponse(
+                1, jpUpdate.response_data + "\n" + maeUpdate.response_data
+            )
+
+    # 更新日元汇率
+    async def UpdateJpRate(self) -> FuncResponse:
+        jpUpdate = JpRate.UpdateRate(self)
+        return jpUpdate
+
+    # 更新mae汇率
+    async def UpdateMaeRate(self) -> FuncResponse:
+        maeUpdate = MaeRate.UpdateRate(self)
+        return maeUpdate
 
 
 rate = Rate()
@@ -22,42 +44,42 @@ bot = nonebot.get_bot()
 @on_startup
 async def _():
     global rate
-    jprate_response = GetJpRate()
-    if jprate_response.response_code == 0:
-        rate.jpRate = jprate_response.response_rate
-    maerate_response = await GetMaeRate()
-    if maerate_response.response_code == 0:
-        rate.maeRate = maerate_response.response_rate
+    await rate.UpdateRate()
 
 
-# 定时获得日元汇率值并更新
+# 定时更新汇率
 @nonebot.scheduler.scheduled_job("cron", minute="*")
 async def _():
-    response = GetJpRate()
-    if response.response_code == 0:
-        rate_update = response.response_rate
-        date_update = response.response_date
-        if rate_update != rate.jpRate:
-            await bot.send_private_msg(
-                user_id=501079827,
-                message=f"日元汇率变动：{rate_update}\n更新时间{date_update}",
-            )
-            rate.jpRate = rate_update
-    elif response.response_code == 1:
+    global rate
+    updateRate = await rate.UpdateRate()
+    if updateRate.response_code == 0:
+        return
+    elif updateRate.response_code == 1:
         await bot.send_private_msg(
-            user_id=501079827, message=f"日元汇率请求失败\n{response.response_data}"
+            user_id=501079827, message=f"汇率更新失败\n{updateRate.response_data}"
         )
 
 
-# 定时获得mae汇率值并更新
+# 定时推送日元汇率
 @nonebot.scheduler.scheduled_job("cron", hour="*")
 async def _():
-    maerate_response = await GetMaeRate()
-    if maerate_response.response_code == 0:
-        rate.maeRate = maerate_response.response_rate
-    elif maerate_response.response_code == 1:
-        bot = nonebot.get_bot()
-        await bot.send_private_msg(
-            user_id=501079827,
-            message=f"Mae汇率请求失败\n{maerate_response.response_data}",
-        )
+    global rate
+    await bot.send_private_msg(
+        user_id=501079827, message=f"日元汇率变动：{rate.jpRate}\n更新时间：{rate.date}"
+    )
+
+
+# 主动拉取日元汇率
+@on_command("日元", only_to_me=False)
+async def _(session: CommandSession):
+    global rate
+    await rate.UpdateJpRate()
+    await session.send(f"日元汇率：{rate.jpRate}\n更新时间：{rate.date}")
+
+
+# 主动拉取mae汇率
+@on_command("汇率", only_to_me=False)
+async def _(session: CommandSession):
+    global rate
+    await rate.UpdateMaeRate()
+    await session.send(f"Mae汇率：{rate.maeRate}")

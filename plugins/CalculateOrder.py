@@ -1,6 +1,5 @@
 from nonebot import on_command, CommandSession
 
-from plugins.Modules.GetMaeRate import GetMaeRate
 from plugins.Rate import rate
 
 
@@ -18,7 +17,7 @@ async def CalculateOrder(session: CommandSession):
         while len(message)==0:
             message = (await session.aget(prompt=f'[CQ:reply,id={session.event.message_id}]参数错误！请输入需要计算的金额')).strip()
 
-
+    global rate
     if len(message) == 1:
         jp = message[0]
         point = 1
@@ -30,15 +29,10 @@ async def CalculateOrder(session: CommandSession):
     try:
         jp = int(jp)
         point = int(point)
-        maeRate_response = await GetMaeRate()
-        if maeRate_response.response_code == 0:
-            maeRate = maeRate_response.response_rate
-        elif maeRate_response.response_code ==1:
-            maeRate = rate.maeRate
         #计算
         price1 = jp * 0.052
-        price2 = (jp + 50) * maeRate
-        text = f'''参考汇率：{maeRate}\n人工: {price1:.2f}r\n机切: {price2:.2f}r'''
+        price2 = (jp + 50) * rate.maeRate
+        text = f'''参考汇率：{rate.maeRate}\n人工: {price1:.2f}r\n机切: {price2:.2f}r'''
         if point != 1:
             if where == '1':
                 point_price = price1 / point

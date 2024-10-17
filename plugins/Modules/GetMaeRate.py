@@ -1,4 +1,5 @@
 import requests
+from typing import Union
 
 from plugins.CustomClass.response import FuncResponse
 
@@ -10,7 +11,20 @@ class MaeRateResponse(FuncResponse):
         self.response_rate = response_rate
 
 
-async def GetMaeRate():
+class MaeRate():
+    def __init__(self, maeRate: float = 0.052):
+        self.maeRate = maeRate
+
+    def UpdateRate(self) -> FuncResponse:
+        newRate = GetMaeRate()
+        if newRate.response_code == 0:
+            self.maeRate = newRate.response_rate
+            return FuncResponse(0, "")
+        elif newRate.response_code == 1:
+            return FuncResponse(1, newRate.response_data)
+
+
+def GetMaeRate() -> Union[FuncResponse, MaeRateResponse]:
     url = "https://www.maetown.cn/Rate/GetMyRate"
     headers = {
         "accept": "*/*",
