@@ -1,3 +1,7 @@
+'''
+拉取中国银行日元现汇汇率
+'''
+
 import requests
 from bs4 import BeautifulSoup
 from typing import Union

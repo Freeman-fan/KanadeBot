@@ -1,3 +1,7 @@
+'''
+拉取Mae交易汇率
+'''
+
 import requests
 from typing import Union
 
