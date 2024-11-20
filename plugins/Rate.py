@@ -35,7 +35,7 @@ class Rate(JpRate, MaeRate):
         maeUpdate = MaeRate.UpdateRate(self)
         return maeUpdate
 
-
+pushrate = 0.0
 rate = Rate()
 bot = nonebot.get_bot()
 
@@ -64,9 +64,11 @@ async def _():
 @nonebot.scheduler.scheduled_job("cron", hour="*")
 async def _():
     global rate
-    await bot.send_private_msg(
-        user_id=501079827, message=f"日元汇率变动：{rate.jpRate}\n更新时间：{rate.date}"
-    )
+    if rate != pushrate:
+        pushrate = rate
+        await bot.send_private_msg(
+            user_id=501079827, message=f"日元汇率变动：{rate.jpRate}\n更新时间：{rate.date}"
+        )
 
 
 # 主动拉取日元汇率
