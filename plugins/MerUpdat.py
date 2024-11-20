@@ -51,7 +51,7 @@ async def IdItem(session: CommandSession):
 
 
 # 主动更新
-@nonebot.scheduler.scheduled_job("interval", seconds=10)
+@nonebot.scheduler.scheduled_job("interval", seconds=60)
 async def update():
     bot = nonebot.get_bot()
     updateAll = await getmerupdata.GetAllUpdate()

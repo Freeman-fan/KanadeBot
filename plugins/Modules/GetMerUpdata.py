@@ -246,7 +246,7 @@ class GetMerUpdate:
                             )
                             updateGroup.append(updateResponse)
                             self.UpdataItem(mNum, "jpprice", merItem.product_price)
-                        elif item[3] != 'on_sale':
+                        elif merItem.product_status != 'on_sale':
                             updateResponse = UpdateResponse(
                                 3, mNum, None, None, item[5]
                             )
