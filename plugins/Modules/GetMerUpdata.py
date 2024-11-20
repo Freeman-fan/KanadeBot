@@ -1,3 +1,7 @@
+"""
+监控功能
+"""
+
 from typing import Union
 import sqlite3
 from sqlite3 import Error as DatabaseError
@@ -220,30 +224,44 @@ class GetMerUpdate:
                 for item in result:
                     mNum = item[0]
                     merItem = await GetMerItem(mNum=mNum)
-                    if item[1] != merItem.product_name:
-                        updateResponse = UpdateResponse(
-                            1, mNum, item[1], merItem.product_name, item[5]
-                        )
-                        updateGroup.append(updateResponse)
-                        self.UpdataItem(mNum, "name", merItem.product_name)
-                    elif item[2] != merItem.product_price:
-                        updateResponse = UpdateResponse(
-                            2, mNum, item[2], int(merItem.product_price), item[5]
-                        )
-                        updateGroup.append(updateResponse)
-                        self.UpdataItem(mNum, "jpprice", merItem.product_price)
-                    elif item[3] != merItem.product_status:
-                        updateResponse = UpdateResponse(3, mNum, None, None, item[5])
-                        updateGroup.append(updateResponse)
-                        # 状态变动唯一可能就是售出，因此直接删除
-                        cur.execute("DELETE FROM items WHERE mNum = ?", (mNum,))
-                        self.conn.commit()
-                    elif item[4] != len(merItem.comment_list):
-                        updateResponse = UpdateResponse(
-                            4, mNum, None, merItem.comment_list[0], item[5]
-                        )
-                        updateGroup.append(updateResponse)
-                        self.UpdataItem(mNum, "commentNum", len(merItem.comment_list))
+                    if merItem.response_code == 1:
+                        if merItem.response_data == "请求失败，商品不存在":
+                            updateResponse = UpdateResponse(
+                                5, mNum, None, None, item[5]
+                            )
+                            updateGroup.append(updateResponse)
+                            # 商品已被删除，因此直接删除
+                            cur.execute("DELETE FROM items WHERE mNum = ?", (mNum,))
+                            self.conn.commit()
+                    else:
+                        if item[1] != merItem.product_name:
+                            updateResponse = UpdateResponse(
+                                1, mNum, item[1], merItem.product_name, item[5]
+                            )
+                            updateGroup.append(updateResponse)
+                            self.UpdataItem(mNum, "name", merItem.product_name)
+                        elif item[2] != merItem.product_price:
+                            updateResponse = UpdateResponse(
+                                2, mNum, item[2], int(merItem.product_price), item[5]
+                            )
+                            updateGroup.append(updateResponse)
+                            self.UpdataItem(mNum, "jpprice", merItem.product_price)
+                        elif item[3] != 'on_sale':
+                            updateResponse = UpdateResponse(
+                                3, mNum, None, None, item[5]
+                            )
+                            updateGroup.append(updateResponse)
+                            # 状态变动唯一可能就是售出，因此直接删除
+                            cur.execute("DELETE FROM items WHERE mNum = ?", (mNum,))
+                            self.conn.commit()
+                        elif item[4] != len(merItem.comment_list):
+                            updateResponse = UpdateResponse(
+                                4, mNum, None, merItem.comment_list[0], item[5]
+                            )
+                            updateGroup.append(updateResponse)
+                            self.UpdataItem(
+                                mNum, "commentNum", len(merItem.comment_list)
+                            )
                 if updateGroup != []:
                     return FuncResponse(0, updateGroup)
                 else:
@@ -251,7 +269,6 @@ class GetMerUpdate:
             else:
                 return FuncResponse(-1, "没有更新")
         except Exception as e:
-            print(e)
             return FuncResponse(1, f"查找更新失败：{str(e)}")
         finally:
             if cur:

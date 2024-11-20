@@ -51,14 +51,14 @@ async def IdItem(session: CommandSession):
 
 
 # 主动更新
-@nonebot.scheduler.scheduled_job("interval", seconds=30)
+@nonebot.scheduler.scheduled_job("interval", seconds=10)
 async def update():
     bot = nonebot.get_bot()
     updateAll = await getmerupdata.GetAllUpdate()
     if updateAll.response_code == -1:
         return
     elif updateAll.response_code == 1:
-        await bot.send_private_msg(501079827, message=updateAll.response_data)
+        await bot.send_private_msg(user_id=501079827, message=updateAll.response_data)
     elif updateAll.response_code == 0:
         for update in updateAll.response_data:
             text = update.mNum
@@ -73,6 +73,8 @@ async def update():
             elif update.updateId == 4:
                 text += "\n留言变动\n"
                 text += f"{update.newData[0]}: {update.newData[1]}"
+            elif update.updateId == 5:
+                text += "\n商品被删除\n已结束监控"
 
             ids = update.id.split()
             print(ids,update.id)
