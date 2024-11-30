@@ -77,9 +77,8 @@ async def _():
                     if match:
                         # 提取匹配的组
                         product_id = match.group(1)
-                        query_param = match.group(2)
                         # 构造新的链接
-                        firstphoto = f"https://mercdn.maetown.cn/item/detail/orig/photos/{product_id}_1.jpg?{query_param}"
+                        firstphoto = f"https://image02.doorzo.net/c!/w=240/thumb/photos/{product_id}_1.jpg"
                     kPrice = round(jpprice * 0.052, 2)
                     maePrice = round((jpprice + 50) * rate.maeRate, 2)
                     if jpprice == 9999999:

@@ -50,7 +50,7 @@ async def _():
 
 # 定时更新汇率
 @nonebot.scheduler.scheduled_job("cron", minute="*")
-async def _():
+async def UpdateRate():
     global rate
     updateRate = await rate.UpdateRate()
     if updateRate.response_code == 0:
@@ -63,7 +63,7 @@ async def _():
 
 # 定时推送日元汇率
 @nonebot.scheduler.scheduled_job("cron", hour="*")
-async def _():
+async def PushRate():
     global rate, pushrate
     if rate != pushrate:
         pushrate = rate
@@ -75,7 +75,7 @@ async def _():
 
 # 主动拉取日元汇率
 @on_command("日元", only_to_me=False)
-async def _(session: CommandSession):
+async def GetJpRate(session: CommandSession):
     global rate
     await rate.UpdateJpRate()
     await session.send(f"日元汇率：{rate.jpRate}\n更新时间：{rate.date}")
@@ -83,7 +83,7 @@ async def _(session: CommandSession):
 
 # 主动拉取mae汇率
 @on_command("汇率", only_to_me=False)
-async def _(session: CommandSession):
+async def GetMaeRate(session: CommandSession):
     global rate
     await rate.UpdateMaeRate()
     await session.send(f"Mae汇率：{rate.maeRate}")

@@ -33,6 +33,8 @@ async def MerGood(session: CommandSession):
                         point_price = MerItem.product_price_cny / int(point)
                     text = text + f"\n共{point}点，{point_price:.2f}r/"
                 for photo_url in MerItem.imagelist:
+                    match = re.search(r'/m(\d+_\d+)', photo_url)
+                    photo_url = f'https://image03.doorzo.net/item/detail/orig/photos/m{match.group(1)}.jpg'
                     photo_cq = f"[CQ:image,file={photo_url}]"
                     text = text + photo_cq
             elif MerItem.response_code == 1:
