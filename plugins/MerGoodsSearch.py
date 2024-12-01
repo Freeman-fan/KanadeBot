@@ -71,7 +71,7 @@ async def _():
                 for data in UnsandData:
                     mNum, name, jpprice, firstphoto = data
                     match = re.match(
-                        r"https?://mercdn\.maetown\.cn/c!/w=240,f=webp/thumb/photos/(m\d+)_1\.jpg\?(\d+)",
+                        r"https?://mercdn2\.maetown\.cn/c!/w=240,f=webp/thumb/photos/(m\d+)_1\.jpg\?(\d+)",
                         firstphoto,
                     )
                     if match:
