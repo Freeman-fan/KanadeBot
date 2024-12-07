@@ -1,8 +1,6 @@
-import aiocqhttp
 import nonebot
 from nonebot import on_startup
 
-import time
 import json
 import re
 import os
