@@ -20,7 +20,8 @@ async def _(event: Event):
     message = chat_reply
     if chat_reply == None and raw_message.strip() == f"[CQ:at,qq={event.self_id}]":
         message = "我在。"
-    await bot.send(event=event, message=message)
+    if message:
+        await bot.send(event=event, message=message)
 
 
 def Chat(raw_message: str):
@@ -33,5 +34,6 @@ def Chat(raw_message: str):
             if text in raw_message:
                 reply = item.get("reply")
                 message = random.choice(reply)
-
                 return message
+            
+    return None
