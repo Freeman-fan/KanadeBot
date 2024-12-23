@@ -1,6 +1,8 @@
 import sqlite3
 import random
 
+
+import nonebot
 from nonebot import on_command, CommandSession
 
 
@@ -156,9 +158,21 @@ def YearReportCount() -> dict:
 # 个人报告
 @on_command("个人报告", only_to_me=False)
 async def PersonalReport(session: CommandSession):
+    #只允许私聊
     if session.event.message_type == "group":
         return
+    #获取cn
     cn = session.current_arg_text.strip()
+    #鉴权
+    bot = nonebot.get_bot()
+    group_id = 937806799
+    user_id = session.event.user_id
+    result = await bot.get_group_member_info(group_id=group_id, user_id=user_id)
+    nickname = result['card']
+    if cn not in nickname:
+        await session.send("你没有权限查看该用户的个人报告")
+        return
+    #获取报告
     result_dict = PersonalReportCount(cn)
     await session.send(
         f"{cn}个人报告\n"
