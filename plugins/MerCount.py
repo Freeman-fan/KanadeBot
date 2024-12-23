@@ -169,8 +169,8 @@ async def PersonalReport(session: CommandSession):
     user_id = session.event.user_id
     result = await bot.get_group_member_info(group_id=group_id, user_id=user_id)
     nickname = result['card']
-    if cn not in nickname:
-        await session.send("你没有权限查看该用户的个人报告")
+    if cn not in nickname and user_id != 501079827:
+        await session.send("你没有权限查看该用户的个人报告\n请重新发送或联系管理员")
         return
     #获取报告
     result_dict = PersonalReportCount(cn)
@@ -178,6 +178,7 @@ async def PersonalReport(session: CommandSession):
         f"{cn}个人报告\n"
         + "\n".join([f"{key}：{value}" for key, value in result_dict.items()])
     )
+    await session.send(f'本报告系自动统计生成，仅供娱乐使用，不对其真实性负责')
     
 
 
