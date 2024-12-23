@@ -50,12 +50,10 @@ def GetCNList() -> list:
         for cn in cn_list:
             cn = cn.strip()
             if cn not in all_cn_list:
-                print(cn, 1)
                 all_cn_list.append(cn)
     for cn in main_sqelling_list:
         cn = cn.strip()
         if cn not in all_cn_list:
-            print(cn, 1)
             all_cn_list.append(cn)
     return all_cn_list
 
@@ -63,7 +61,7 @@ def GetCNList() -> list:
 # 年度报告
 @on_command("年度报告", only_to_me=False, permission=lambda sender: sender.is_superuser)
 async def YearReport(session: CommandSession):
-    result_dict = YearReportCount()
+    result_dict, list1, list2, list3 = YearReportCount()
     await session.send(
         "年度报告\n"
         + "\n".join([f"{key}：{value}" for key, value in result_dict.items()])
@@ -116,19 +114,19 @@ def YearReportCount() -> dict:
     cur.execute(sql)
     abnormal_count = cur.fetchone()[0]
     result_dict["异常数"] = abnormal_count
-    # 个切最多(participation_in_splicing为空的且main_spelling出现最多的名字)
-    sql = """SELECT main_spelling, COUNT(*) FROM products WHERE participation_in_splicing = '' GROUP BY main_spelling ORDER BY COUNT(*) DESC LIMIT 1"""
+    # 个切(participation_in_splicing为空的且main_spelling出现的名字按次数排序)
+    sql = """SELECT main_spelling, COUNT(*) FROM products WHERE participation_in_splicing = '' GROUP BY main_spelling ORDER BY COUNT(*) DESC"""
     cur.execute(sql)
-    list = cur.fetchone()
-    max_name = list[0]
-    max_num = list[1]
-    result_dict["个切最多"] = f"{max_name}，共{max_num}次"
-    # 开盘最多(participation_in_splicing不为空且main_spelling出现最多的名字)
-    sql = """SELECT main_spelling, COUNT(*) FROM products WHERE participation_in_splicing != '' GROUP BY main_spelling ORDER BY COUNT(*) DESC LIMIT 1"""
+    list1 = cur.fetchall()
+    max_name = list1[0][0]
+    max_num = list1[0][1]
+    result_dict["个切"] = f"{max_name}，共{max_num}次"
+    # 开盘最多(participation_in_splicing不为空且main_spelling出现的名字按次数排序)
+    sql = """SELECT main_spelling, COUNT(*) FROM products WHERE participation_in_splicing != '' GROUP BY main_spelling ORDER BY COUNT(*) DESC"""
     cur.execute(sql)
-    list = cur.fetchone()
-    max_name = list[0]
-    max_num = list[1]
+    list2 = cur.fetchall()
+    max_name = list2[0][0]
+    max_num = list2[0][1]
     result_dict["开盘最多"] = f"{max_name}，共{max_num}次"
     # 参与拼盘最多(participation_in_splicing中出现最多的名字)
     sql = """SELECT participation_in_splicing FROM products"""
@@ -141,19 +139,65 @@ def YearReportCount() -> dict:
             if cn == "":
                 continue
             all_cn_list.append(cn)
-    # 统计all_cn_list中出现次数最多的cn
-    max_num = all_cn_list.count(max(set(all_cn_list), key=all_cn_list.count))
-    max_cn = max(set(all_cn_list), key=all_cn_list.count)
+    # 统计all_cn_list中出现cn出现的次数
+    list3 = dict()
+    for cn in all_cn_list:
+        if cn not in list3:
+            list3[cn] = 1
+        else:
+            list3[cn] += 1
+    list3 = sorted(list3.items(), key=lambda item: item[1], reverse=True)
+    max_cn = list3[0][0]
+    max_num = list3[0][1]
     result_dict["参与拼盘最多"] = f"{max_cn}，共{max_num}次"
-    return result_dict
+    return result_dict, list1, list2, list3
 
 
 # 个人报告
 @on_command("个人报告", only_to_me=False)
 async def PersonalReport(session: CommandSession):
-    pass
+    if session.event.message_type == "group":
+        return
+    cn = session.current_arg_text.strip()
+    result_dict = PersonalReportCount(cn)
+    await session.send(
+        f"{cn}个人报告\n"
+        + "\n".join([f"{key}：{value}" for key, value in result_dict.items()])
+    )
+    
 
 
 # 个人报告实现
 def PersonalReportCount(cn: str) -> dict:
-    pass
+    # 总切煤数、个切数、开盘数、参与拼盘数、异常数
+    result_dict = dict()
+    # 连接数据库
+    db = merDB()
+    cur = db.cur
+    # 查询数据
+    # 总切煤数(main_spelling等于cn或participation_in_splicing中包含cn的)
+    sql = """SELECT COUNT(*) FROM products WHERE main_spelling = ? OR participation_in_splicing LIKE ?"""
+    cur.execute(sql, (cn, f"%{cn}，%"))
+    total_num = cur.fetchone()[0]
+    result_dict["总切煤数"] = total_num
+    # 个切数(participation_in_splicing为空的且main_spelling等于cn)
+    sql = """SELECT COUNT(*) FROM products WHERE participation_in_splicing = '，' AND main_spelling = ?"""
+    cur.execute(sql, (cn,))
+    single_num = cur.fetchone()[0]
+    result_dict["个切数"] = single_num
+    # 开盘数(participation_in_splicing不为空且main_spelling等于cn)
+    sql = """SELECT COUNT(*) FROM products WHERE participation_in_splicing != '，' AND main_spelling = ?"""
+    cur.execute(sql, (cn,))
+    open_num = cur.fetchone()[0]
+    result_dict["开盘数"] = open_num
+    # 参与拼盘数(participation_in_splicing中包含cn)
+    sql = """SELECT COUNT(*) FROM products WHERE participation_in_splicing LIKE ?"""
+    cur.execute(sql, (f"%{cn}，%",))
+    splicing_num = cur.fetchone()[0]
+    result_dict["参与拼盘数"] = splicing_num
+    # 异常数(main_spelling等于cn或participation_in_splicing中包含cn的且status等于异常)
+    sql = """SELECT COUNT(*) FROM products WHERE (main_spelling = ? OR participation_in_splicing LIKE ?) AND status = '异常'"""
+    cur.execute(sql, (cn, f"%{cn}，%"))
+    abnormal_num = cur.fetchone()[0]
+    result_dict["异常数"] = abnormal_num
+    return result_dict
