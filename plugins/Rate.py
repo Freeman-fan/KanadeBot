@@ -49,7 +49,6 @@ async def _():
 
 
 # 定时更新汇率
-@nonebot.scheduler.scheduled_job("cron", minute="*")
 async def UpdateRate():
     global rate
     updateRate = await rate.UpdateRate()
@@ -62,7 +61,6 @@ async def UpdateRate():
 
 
 # 定时推送日元汇率
-@nonebot.scheduler.scheduled_job("cron", hour="*")
 async def PushRate():
     global rate, pushrate
     if rate != pushrate:

@@ -1,6 +1,6 @@
 import json
 
-from nonebot import on_command, CommandSession, on_startup, on_websocket_connect
+from nonebot import on_command, CommandSession, on_startup
 
 from plugins.CustomClass.response import FuncResponse
 

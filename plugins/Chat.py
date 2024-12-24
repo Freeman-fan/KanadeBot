@@ -1,5 +1,6 @@
 from aiocqhttp import Event
 import nonebot
+
 import json
 import random
 

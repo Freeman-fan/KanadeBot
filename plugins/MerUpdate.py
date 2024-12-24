@@ -1,10 +1,8 @@
-import aiocqhttp
 import nonebot
 from nonebot import on_startup, on_command, CommandSession
 
-import time
 
-from plugins.Modules.GetMerUpdata import GetMerUpdate, UpdateResponse
+from plugins.Modules.GetMerUpdata import GetMerUpdate
 
 
 __plugin_name__ = "监控mer商品更新信息"
@@ -51,8 +49,7 @@ async def IdItem(session: CommandSession):
 
 
 # 主动更新
-@nonebot.scheduler.scheduled_job("interval", seconds=60)
-async def update():
+async def MerItemUpdate():
     bot = nonebot.get_bot()
     updateAll = await getmerupdata.GetAllUpdate()
     if updateAll.response_code == -1:

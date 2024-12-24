@@ -1,9 +1,10 @@
 import sqlite3
 import random
 
-
 import nonebot
 from nonebot import on_command, CommandSession
+
+plugin_name = "年终统计"
 
 
 class merDB:

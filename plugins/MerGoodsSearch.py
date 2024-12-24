@@ -57,8 +57,7 @@ async def _():
 
 
 # 抓取并推送
-@nonebot.scheduler.scheduled_job("interval", seconds=10)
-async def _():
+async def MerPush():
     bot = nonebot.get_bot()
     for request in requests:
         if request.inuse == True:
