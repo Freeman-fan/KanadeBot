@@ -117,14 +117,14 @@ def YearReportCount() -> dict:
     abnormal_count = cur.fetchone()[0]
     result_dict["异常数"] = abnormal_count
     # 个切(participation_in_splicing为空的且main_spelling出现的名字按次数排序)
-    sql = """SELECT main_spelling, COUNT(*) FROM products WHERE participation_in_splicing = '' GROUP BY main_spelling ORDER BY COUNT(*) DESC"""
+    sql = """SELECT main_spelling, COUNT(*) FROM products WHERE participation_in_splicing = '，' GROUP BY main_spelling ORDER BY COUNT(*) DESC"""
     cur.execute(sql)
     list1 = cur.fetchall()
     max_name = list1[0][0]
     max_num = list1[0][1]
     result_dict["个切"] = f"{max_name}，共{max_num}次"
     # 开盘最多(participation_in_splicing不为空且main_spelling出现的名字按次数排序)
-    sql = """SELECT main_spelling, COUNT(*) FROM products WHERE participation_in_splicing != '' GROUP BY main_spelling ORDER BY COUNT(*) DESC"""
+    sql = """SELECT main_spelling, COUNT(*) FROM products WHERE participation_in_splicing != '，' GROUP BY main_spelling ORDER BY COUNT(*) DESC"""
     cur.execute(sql)
     list2 = cur.fetchall()
     max_name = list2[0][0]
