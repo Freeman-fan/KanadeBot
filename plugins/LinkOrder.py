@@ -26,19 +26,6 @@ class LinkResponse(FuncResponse):
         self.response_message_type = response_message_type
 
 
-# 初始化：拉取link的配置文件
-# @on_command("更新链接配置", only_to_me=True)
-@on_startup
-def GetLinkConfig():
-    global aliases_list
-    # 打开配置文件
-    with open("./plugins/Config/Link.json", "r", encoding="utf-8") as jsonfile:
-        data = json.load(jsonfile)
-    # 创建匹配列表
-    length = len(data)
-    aliases_list = tuple(f"l{i}" for i in range(1, length + 1))
-    print(aliases_list)
-
 
 @on_command("l", patterns="l\d+", only_to_me=False)
 async def LinkOrder(session: CommandSession):

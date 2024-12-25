@@ -63,8 +63,8 @@ async def UpdateRate():
 # 定时推送日元汇率
 async def PushRate():
     global rate, pushrate
-    if rate != pushrate:
-        pushrate = rate
+    if rate.jpRate != pushrate:
+        pushrate = rate.jpRate
         await bot.send_private_msg(
             user_id=501079827,
             message=f"日元汇率变动：{rate.jpRate}\n更新时间：{rate.date}",

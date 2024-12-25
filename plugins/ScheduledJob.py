@@ -13,7 +13,6 @@ plugin_name = "定时任务触发器"
 # 整点任务
 @scheduler.scheduled_job("cron", hour="*")
 async def scheduled_job_1hour():
-    print("1小时任务")
     await plugins.Rate.PushRate()
     logger.info(f'整点任务触发')
 
