@@ -5,6 +5,8 @@ import time
 import nonebot
 from nonebot import on_command, CommandSession
 
+from plugins.Modules.CreateForwardMsg import ForwardMsg
+
 plugin_name = "年终统计"
 
 
@@ -20,7 +22,7 @@ class merDB:
 
 
 # 抽奖
-@on_command("抽奖", only_to_me=False, permission=lambda sender: sender.is_superuser)
+@on_command("抽奖", only_to_me=True, permission=lambda sender: sender.is_superuser)
 async def ChouJiang(session: CommandSession):
     message = session.current_arg_text.split()
     try:
@@ -92,12 +94,43 @@ async def YearReport(session: CommandSession):
     text = f"开盘界の盘古——{result_dict['开盘cn']}！\n2024年你一共开了{result_dict['开盘最多']}个拼盘。盘古开天地你开谷盘，感谢你在包尾推不出去、先切后拼没人吃、疯狂推车没人理、打表收肾地狱、好不容易拼成结果慢人一步独守sold房的世道还有一颗坚定不移的开盘精神。加油，到现在还在开盘的人，做什么都会成功的.jpg"
     await session.send(text)
     time.sleep(5)
-    text = f"参盘冲锋兵——{result_dict['参与拼盘cn']}！既然你诚心诚意的发问了，我就大发慈悲的告诉你，为了防止大盘被抢sold，为了盘主的钱包，贯彻停谷与我凹的有机统一，可爱又迷人的吃谷角色，{result_dict['参与拼盘cn']}！2024年一共参与了{result_dict['参与拼盘最多']}个拼盘。ta是穿梭在夜宵救人于水火的天使，停谷的明天在等著ta！"
+    text = f"参盘冲锋兵——{result_dict['参与拼盘cn']}！既然你诚心诚意的发问了，我就大发慈悲的告诉你，为了防止大盘被抢sold，为了拯救盘主的钱包，贯彻停谷与我凹的有机统一，可爱又迷人的吃谷角色，{result_dict['参与拼盘cn']}！2024年一共参与了{result_dict['参与拼盘最多']}个拼盘。ta是穿梭在夜宵救人于水火的天使，停谷的明天在等著ta！"
     await session.send(text)
     time.sleep(5)
     await session.send('我们要以这些群友为榜样，努力赚钱，努力吃谷，做自推的ATM机，我们都有美好的未来！')
     time.sleep(1)
     await session.send(f'本报告系自动统计生成。文案撰写：Yan')
+
+#年度榜单
+@on_command("年度榜单", only_to_me=True, permission=lambda sender: sender.is_superuser)
+async def YearRank(session: CommandSession):
+    _, list1, list2, list3 = YearReportCount()
+    forwardmsg = ForwardMsg()
+    text='个切榜：\n'
+    for item in list1[:30]:
+        text += f"{item[0]}：{item[1]}次"
+        if item != list1[:30][-1]:
+            text += '\n'
+    forwardmsg.AddTextMessage(text)
+    text = '开盘榜\n'
+    for item in list2[:30]:
+        text += f"{item[0]}：{item[1]}次"
+        if item != list2[:30][-1]:
+            text += '\n'
+    forwardmsg.AddTextMessage(text)
+    text = '参与拼盘榜\n'
+    for item in list3[:30]:
+        text += f"{item[0]}：{item[1]}次"
+        if item != list3[:30][-1]:
+            text += '\n'
+    forwardmsg.AddTextMessage(text)    
+    bot = nonebot.get_bot()
+    if session.event.message_type == "private":
+        await bot.send_private_forward_msg(user_id=session.event.user_id, message=forwardmsg.msg)
+    elif session.event.message_type == "group":
+        await bot.send_group_forward_msg(group_id = session.event.group_id, message=forwardmsg.msg)
+
+
 
 
 # 年度报告实现
@@ -202,7 +235,7 @@ async def PersonalReport(session: CommandSession):
     group_id = 937806799
     user_id = session.event.user_id
     result = await bot.get_group_member_info(group_id=group_id, user_id=user_id)
-    nickname = result['card']
+    nickname = result['card'].lower()
     if cn not in nickname and user_id != 501079827:
         await session.send("你没有权限查看该用户的个人报告\n请重新发送或联系管理员")
         return
