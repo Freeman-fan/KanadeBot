@@ -12,7 +12,7 @@ async def card_init():
 
 
 # 略缩图
-@on_command("findcard", only_to_me=False)
+@on_command("findcard", aliases=("查卡"),only_to_me=False)
 async def findcard(session: CommandSession):
     input = session.current_arg_text.strip()
     if input:
