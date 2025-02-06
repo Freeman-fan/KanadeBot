@@ -9,7 +9,7 @@ from plugins.CustomClass.response import FuncResponse
 def BaiduTranslate(text:str = 'apple', raw_lang:str = 'auto', to_lang:str = 'zh') -> FuncResponse:
     # 读取配置文件
     config = configparser.ConfigParser()
-    config.read("./plugins/config/BaiduTranslate.ini", encoding="utf-8")
+    config.read("./plugins/config/Config.ini", encoding="utf-8")
     appid = config.get("BaiduTranslate", "appid")
     secret_key = config.get("BaiduTranslate", "secret_key")
     # 签名生成

@@ -63,9 +63,9 @@ async def MerGood(session: CommandSession):
         await bot.send_group_msg(**params, message=message)
         if MerItem.response_code == 0:
             if MerItem.product_status == "on_sale":
-                file_uri = Path(os.path.abspath("./images/mnr_getGood.jpg")).as_uri()
+                file_uri = Path(os.path.abspath("./Temp/mnr_getGood.jpg")).as_uri()
             else:
-                file_uri = Path(os.path.abspath("./images/miku_sold.jpg")).as_uri()
+                file_uri = Path(os.path.abspath("./Temp/miku_sold.jpg")).as_uri()
             time.sleep(0.2)
             await bot.send_group_msg(**params, message=f"[CQ:image,file={file_uri}]")
 
