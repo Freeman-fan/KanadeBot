@@ -12,7 +12,7 @@ async def card_init():
 
 
 # 略缩图
-@on_command("findcard", aliases=("查卡"),only_to_me=False)
+@on_command("findcard", aliases=("查卡"), only_to_me=False)
 async def findcard(session: CommandSession):
     input = session.current_arg_text.strip()
     if input:
@@ -31,7 +31,7 @@ async def findcard(session: CommandSession):
         await session.send("请输入角色名")
 
 
-#大图
+# id查大图
 @on_command("card", only_to_me=False)
 async def card(session: CommandSession):
     input = session.current_arg_text.strip()
@@ -41,7 +41,7 @@ async def card(session: CommandSession):
         except ValueError:
             await session.send("请输入正确的卡号")
             return
-        
+        # 查卡
         response = GetPjskCard.get_card_fullsize(card_id)
         if response.response_code == 0:
             message = f"[CQ:reply,id={session.event.message_id}]"
@@ -57,7 +57,59 @@ async def card(session: CommandSession):
         await session.send("请输入卡号")
 
 
-#更新卡面数据
+# 卡面别名查大图
+@on_command("cardnn", only_to_me=False)
+async def cardnn(session: CommandSession):
+    input = session.current_arg_text.strip()
+    if input:
+        charaName, card_name = input.split(maxsplit=2)
+        Chara_id = GetPjskCard.charaName2charaID(charaName)
+        if Chara_id:
+            card_id = GetPjskCard.cardName2cardID(Chara_id, card_name)
+            if card_id.response_code == 0:
+                response = GetPjskCard.get_card_fullsize(int(card_id.response_data))
+                if response.response_code == 0:
+                    message = f"[CQ:reply,id={session.event.message_id}]"
+                    message += f"卡面id：{card_id.response_data}"
+                    if type(response.response_data) == list:
+                        for file in response.response_data:
+                            message += f"[CQ:image,file=file:///{file}]"
+                    else:
+                        message += f"[CQ:image,file=file:///{response.response_data}]"
+                    await session.send(message)
+                else:
+                    await session.send(f"查询失败：{response.response_data}")
+            else:
+                await session.send(f"未找到卡片：{card_name}")
+        else:
+            await session.send(f"未找到角色：{charaName}")
+    else:
+        await session.send("请输入角色名和卡片名")
+
+
+# 新增卡面别名
+@on_command("addcardnn", only_to_me=False)
+async def addcardnn(session: CommandSession):
+    input = session.current_arg_text.strip()
+    if input:
+        input = input.split(maxsplit=3)
+        if len(input) != 3:
+            await session.send("输入格式错误，请按照格式输入：角色名 卡面别名 卡面id")
+            return
+        chara_id = GetPjskCard.charaName2charaID(input[0])
+        if not chara_id:
+            await session.send(f"未找到角色：{input[0]}")
+            return
+        input[0] = chara_id
+        response = GetPjskCard.add_card_name(*input)
+        if response.response_code == 0:
+            await session.send(f"新增卡面别名成功。")
+        else:
+            await session.send(f"新增卡面别名失败：{response.response_data}")
+    else:
+        await session.send("请输入角色名、卡面别名和卡面id")
+
+# 更新卡面数据
 @on_command("cardupdate", only_to_me=False)
 async def cardupdate(session: CommandSession):
     response = GetPjskCard.update_data()
