@@ -15,20 +15,19 @@ async def card_init():
 @on_command("findcard", aliases=("查卡"), only_to_me=False)
 async def findcard(session: CommandSession):
     input = session.current_arg_text.strip()
-    if input:
-        chara_id = GetPjskCard.charaName2charaID(input)
-        if chara_id:
-            response = GetPjskCard.get_membercollect(chara_id)
-            if response.response_code == 0:
-                message = f"[CQ:reply,id={session.event.message_id}]"
-                message += f"[CQ:image,file=file:///{response.response_data}]"
-                await session.send(message)
-            else:
-                await session.send(f"查询失败：{response.response_data}")
+    if input is '':
+        input = 'knd'
+    chara_id = GetPjskCard.charaName2charaID(input)
+    if chara_id:
+        response = GetPjskCard.get_membercollect(chara_id)
+        if response.response_code == 0:
+            message = f"[CQ:reply,id={session.event.message_id}]"
+            message += f"[CQ:image,file=file:///{response.response_data}]"
+            await session.send(message)
         else:
-            await session.send(f"未找到角色")
+            await session.send(f"查询失败：{response.response_data}")
     else:
-        await session.send("请输入角色名")
+        await session.send(f"未找到角色")
 
 #新增角色别名
 @on_command("addcharann",aliases=("昵称"), only_to_me=False)
@@ -102,6 +101,30 @@ async def cardnn(session: CommandSession):
             await session.send(f"未找到角色：{charaName}")
     else:
         await session.send("请输入角色名和卡片名")
+
+# "卡"通配
+@on_command("卡", only_to_me=False)
+async def card_any(session: CommandSession):
+    input = session.current_arg_text.strip()
+    if input:
+        try:
+            input_list = input.split()
+            if len(input_list) == 1:
+                #检查是否为纯数字
+                if input_list[0].isdigit():
+                    await card(session)
+                    return
+            elif len(input_list) == 2:
+                await cardnn(session)
+                return
+            else:
+                await session.send("[CQ:reply,id={session.event.message_id}]输入格式错误，请按照格式输入：角色名 卡面名 或 卡号")
+                return
+        except:
+            await session.send("[CQ:reply,id={session.event.message_id}]输入格式错误，请按照格式输入：角色名 卡面名 或 卡号")
+            return
+    else:
+        return
 
 
 # 新增卡面别名
