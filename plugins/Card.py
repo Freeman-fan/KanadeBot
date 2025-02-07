@@ -30,6 +30,23 @@ async def findcard(session: CommandSession):
     else:
         await session.send("请输入角色名")
 
+#新增角色别名
+@on_command("addcharann",aliases=("昵称"), only_to_me=False)
+async def addcharann(session: CommandSession):
+    input = session.current_arg_text.strip()
+    if input:
+        input = input.split(maxsplit=2)
+        if len(input) != 2:
+            await session.send("输入格式错误，请按照格式输入：角色名 角色别名")
+            return
+        response = GetPjskCard.add_charann(*input)
+        if response.response_code == 0:
+            await session.send(f"新增角色别名成功。")
+        else:
+            await session.send(f"新增角色别名失败：{response.response_data}")
+    else:
+        await session.send("请输入角色名和角色别名")
+
 
 # id查大图
 @on_command("card", only_to_me=False)

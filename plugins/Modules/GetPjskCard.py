@@ -145,47 +145,51 @@ def update_data() -> FuncResponse:
 
 # 角色昵称转换为id
 def charaName2charaID(chara_name: str) -> int:
-    dic = {
-        "ick": 1,
-        "saki": 2,
-        "hnm": 3,
-        "shiho": 4,
-        "mnr": 5,
-        "hrk": 6,
-        "airi": 7,
-        "szk": 8,
-        "khn": 9,
-        "an": 10,
-        "akt": 11,
-        "toya": 12,
-        "tks": 13,
-        "emu": 14,
-        "nene": 15,
-        "rui": 16,
-        "knd": 17,
-        "mfy": 18,
-        "ena": 19,
-        "mzk": 20,
-        "miku": 21,
-        "rin": 22,
-        "len": 23,
-        "luka": 24,
-        "meiko": 25,
-        "kaito": 26,
-    }
-    try:
-        return dic[chara_name.lower()]
-    except:
+    # 检查角色昵称id配置表是否存在
+    if not os.path.exists(rf"{temp_path}/charann.json"):
         return None
+    # 读取角色昵称id配置表
+    with open(rf"{temp_path}/charann.json", "r", encoding="utf-8") as f:
+        charann_dic = json.load(f)
+    # 检查标准读法
+    try:
+        chara_id_dic = charann_dic["chara_id"]
+        return chara_id_dic[chara_name.lower()]
+    except:
+        try:
+            chara_id_dic = charann_dic["chara_nn"]
+            return chara_id_dic[chara_name.lower()]
+        except:
+            return None
+
+
+# 添加角色昵称
+def add_charann(chara_name: str, chara_nn: str) -> FuncResponse:
+    # 检查角色昵称id配置表是否存在
+    if not os.path.exists(rf"{temp_path}/charann.json"):
+        return FuncResponse(1, "角色昵称id配置表不存在，请先创建")
+    # 读取角色昵称id配置表
+    with open(rf"{temp_path}/charann.json", "r", encoding="utf-8") as f:
+        charann_dic = json.load(f)
+    chara_id = charaName2charaID(chara_name)
+    if chara_id is None:
+        return FuncResponse(1, "角色昵称id不存在，请检查")
+    # 添加角色昵称
+    charann_id_dic = charann_dic["chara_nn"]
+    charann_id_dic[chara_nn.lower()] = chara_id
+    charann_dic["chara_nn"] = charann_id_dic
+    # 写入角色昵称id配置表
+    with open(rf"{temp_path}/charann.json", "w", encoding="utf-8") as f:
+        json.dump(charann_dic, f, ensure_ascii=False, indent=4)
+    return FuncResponse(0, "角色昵称添加成功")
 
 
 # 请求卡面大图
 def get_card_fullsize(card_id: int) -> FuncResponse:
     global temp_path
-
+    # 检查卡面数据配置文件是否存在
     if not os.path.exists(rf"{temp_path}/cards.json"):
         return FuncResponse(1, "卡面数据不存在，请先更新卡面数据")
-
     # 检查id合法性，提取卡面数据
     with open(rf"{temp_path}/cards.json", "r", encoding="utf-8") as f:
         cards = json.load(f)
@@ -257,10 +261,9 @@ def get_card_fullsize(card_id: int) -> FuncResponse:
 # 请求角色略缩图
 def get_membercollect(charaid: int) -> FuncResponse:
     global temp_path
-
+    # 检查卡面数据配置文件是否存在
     if not os.path.exists(rf"{temp_path}/cards.json"):
         return FuncResponse(1, "卡面数据不存在，请先更新卡面数据")
-
     # 检查缓存中是否有对应角色的最新图片
     count = 0
     with open(rf"{temp_path}/cards.json", "r", encoding="utf-8") as f:
@@ -286,7 +289,7 @@ def get_membercollect(charaid: int) -> FuncResponse:
 # 创建角色略缩图_大图
 def create_membercollect(charaid: int) -> FuncResponse:
     global temp_path
-
+    # 读取卡面数据
     with open(rf"{temp_path}/cards.json", "r", encoding="utf-8") as f:
         cards = json.load(f)
     # 创建图片
@@ -347,7 +350,7 @@ def create_single(card) -> Image:
     text_coordinate = ((210 - text_width[0] / 2), int(195 - text_width[1] / 2))
     draw.text(text_coordinate, card["prefix"], "#000000", font)
     # 添加卡号和别名
-    with open(fr"{temp_path}/cardnn.json", "r", encoding="utf-8") as f:
+    with open(rf"{temp_path}/cardnn.json", "r", encoding="utf-8") as f:
         cardnn = json.load(f)
     for item in cardnn:
         if item["Chara_id"] == card["characterId"]:
@@ -355,7 +358,7 @@ def create_single(card) -> Image:
             break
     cardnn = [key for key, value in cardnn.items() if value == str(card["id"])]
     cardnn = cardnn[:2]
-    cardnn_str = " "+"/".join(cardnn)
+    cardnn_str = " " + "/".join(cardnn)
     font = ImageFont.truetype("C:/Windows/Fonts/simsun.ttc", 28)
     text_width = font.getsize(f'id:{card["id"]}{cardnn_str}')
     text_coordinate = ((210 - text_width[0] / 2), int(230 - text_width[1] / 2))
@@ -366,14 +369,12 @@ def create_single(card) -> Image:
 # 创建单张卡面略缩图
 def create_mini_single(card, istrained=False) -> Image:
     global temp_path
-
     # 查找图片路径
     if istrained:
         suffix = "_after_training"
     else:
         suffix = "_normal"
     image_path = rf"{temp_path}\card_mini_image\{card['assetbundleName']}{suffix}.png"
-
     # 读取图片并调整尺寸
     pic = Image.open(image_path)
     pic = pic.resize((156, 156))
@@ -431,15 +432,15 @@ def create_mini_single(card, istrained=False) -> Image:
 # 卡面别名转卡面id
 def cardName2cardID(chara_id: int, card_name: str) -> FuncResponse:
     global temp_path
-
+    # 检查卡面别名配置文件是否存在
     if not os.path.exists(rf"{temp_path}/cardnn.json"):
         return FuncResponse(1, "卡面别名配置文件不存在，请检查")
-
+    # 转换卡面别名
     with open(rf"{temp_path}/cardnn.json", "r", encoding="utf-8") as f:
         card_name_dict = json.load(f)
     try:
         for chara in card_name_dict:
-            if chara['Chara_id'] == chara_id:
+            if chara["Chara_id"] == chara_id:
                 break
         cards = chara["cardnn"]
         return FuncResponse(0, cards[card_name.lower()])
@@ -447,22 +448,21 @@ def cardName2cardID(chara_id: int, card_name: str) -> FuncResponse:
         return FuncResponse(1, "卡面别名转换失败，请检查")
 
 
-#新增卡面别名
+# 新增卡面别名
 def add_card_name(chara_id: int, card_name: str, card_id: str) -> FuncResponse:
     global temp_path
-
+    # 检查卡面别名配置文件是否存在
     if not os.path.exists(rf"{temp_path}/cardnn.json"):
         return FuncResponse(1, "卡面别名配置文件不存在，请检查")
-
-    #检查card_id是否为全数字字符串
+    # 检查card_id是否为全数字字符串
     if not card_id.isdigit():
         return FuncResponse(1, "卡面id必须为数字")
-
+    # 添加卡面别名
     with open(rf"{temp_path}/cardnn.json", "r", encoding="utf-8") as f:
         card_name_dict = json.load(f)
     try:
         for chara in card_name_dict:
-            if chara['Chara_id'] == chara_id:
+            if chara["Chara_id"] == chara_id:
                 chara["cardnn"][card_name.lower()] = str(card_id)
                 break
         with open(rf"{temp_path}/cardnn.json", "w", encoding="utf-8") as f:
