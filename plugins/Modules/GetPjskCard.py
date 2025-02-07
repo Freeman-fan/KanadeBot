@@ -183,6 +183,43 @@ def add_charann(chara_name: str, chara_nn: str) -> FuncResponse:
         json.dump(charann_dic, f, ensure_ascii=False, indent=4)
     return FuncResponse(0, "角色昵称添加成功")
 
+#查看角色昵称
+def get_charann(chara_name: str) -> FuncResponse:
+    # 检查角色昵称id配置表是否存在
+    if not os.path.exists(rf"{temp_path}/charann.json"):
+        return FuncResponse(1, "角色昵称id配置表不存在，请先创建")
+    # 读取角色昵称id配置表
+    with open(rf"{temp_path}/charann.json", "r", encoding="utf-8") as f:
+        charann_dic = json.load(f)
+    chara_id = charaName2charaID(chara_name)
+    if chara_id is None:
+        return FuncResponse(1, "角色昵称id不存在，请检查")
+    # 读取角色昵称
+    charann_list = []
+    charann_id_dic = charann_dic["chara_nn"]
+    for key, value in charann_id_dic.items():
+        if value == chara_id:
+            charann_list.append(key)
+    return FuncResponse(0, charann_list)
+
+#删除角色昵称
+def delete_charann(chara_name: str) -> FuncResponse:
+    # 检查角色昵称id配置表是否存在
+    if not os.path.exists(rf"{temp_path}/charann.json"):
+        return FuncResponse(1, "角色昵称id配置表不存在，请先创建")
+    # 读取角色昵称id配置表
+    with open(rf"{temp_path}/charann.json", "r", encoding="utf-8") as f:
+        charann = json.load(f)
+    charann_dic = charann["chara_nn"]
+    try:
+        del charann_dic[chara_name.lower()]
+    except Exception as e:
+        return FuncResponse(1, f"角色昵称{chara_name}不存在，请检查:{e}")
+    charann["chara_nn"] = charann_dic
+    # 写入角色昵称id配置表
+    with open(rf"{temp_path}/charann.json", "w", encoding="utf-8") as f:
+        json.dump(charann, f, ensure_ascii=False, indent=4)
+    return FuncResponse(0, "角色昵称删除成功")
 
 # 请求卡面大图
 def get_card_fullsize(card_id: int) -> FuncResponse:
@@ -429,6 +466,32 @@ def create_mini_single(card, istrained=False) -> Image:
     return pic
 
 
+# 删除卡面略缩图缓存
+def delete_card_cache(charaid: int) -> FuncResponse:
+    global temp_path
+    # 删除角色略缩图缓存
+    try:
+        for file in os.listdir(rf"{temp_path}/card_membercollect_temp"):
+            if file.startswith(str(charaid)):
+                os.remove(rf"{temp_path}/card_membercollect_temp/{file}")
+                return FuncResponse(0, "删除成功")
+            return FuncResponse(1, "缓存中没有该角色的卡面略缩图")
+    except Exception as e:
+        return FuncResponse(1, e)
+
+
+# 删除所有卡面略缩图缓存
+def delete_all_card_cache() -> FuncResponse:
+    global temp_path
+    # 删除所有卡面略缩图缓存
+    try:
+        for file in os.listdir(rf"{temp_path}/card_membercollect_temp"):
+            os.remove(rf"{temp_path}/card_membercollect_temp/{file}")
+        return FuncResponse(0, "删除成功")
+    except Exception as e:
+        return FuncResponse(1, e)
+
+
 # 卡面别名转卡面id
 def cardName2cardID(chara_id: int, card_name: str) -> FuncResponse:
     global temp_path
@@ -449,7 +512,7 @@ def cardName2cardID(chara_id: int, card_name: str) -> FuncResponse:
 
 
 # 新增卡面别名
-def add_card_name(chara_id: int, card_name: str, card_id: str) -> FuncResponse:
+def add_card_name(chara_id: int, card_id: str, card_name: str) -> FuncResponse:
     global temp_path
     # 检查卡面别名配置文件是否存在
     if not os.path.exists(rf"{temp_path}/cardnn.json"):
@@ -470,3 +533,52 @@ def add_card_name(chara_id: int, card_name: str, card_id: str) -> FuncResponse:
         return FuncResponse(0, "卡面别名添加成功")
     except:
         return FuncResponse(1, "卡面别名添加失败，请检查")
+
+
+#查看卡面别名
+def get_card_name(card_id: str) -> FuncResponse:
+    global temp_path
+    # 检查卡面别名配置文件是否存在
+    if not os.path.exists(rf"{temp_path}/cardnn.json"):
+        return FuncResponse(1, "卡面别名配置文件不存在，请检查")
+    # 查看卡面别名
+    with open(rf"{temp_path}/cardnn.json", "r", encoding="utf-8") as f:
+        card_name_dict = json.load(f)
+    cardnn_list = []
+    try:
+        for chara in card_name_dict:
+            cardnn_dic = chara["cardnn"]
+            #遍历字典中的value，判断是否为card_id
+            for key, value in cardnn_dic.items():
+                if value == str(card_id):
+                    cardnn_list.append(key)
+        if len(cardnn_list) > 0:
+            return FuncResponse(0, cardnn_list)
+        else:
+            return FuncResponse(1, "该卡面没有别名")
+    except:
+        return FuncResponse(1, "卡面别名查看失败，请检查")
+    
+
+#删除卡面别名
+def delete_card_name(card_id: str, card_name: str) -> FuncResponse:
+    global temp_path
+    # 检查卡面别名配置文件是否存在
+    if not os.path.exists(rf"{temp_path}/cardnn.json"):
+        return FuncResponse(1, "卡面别名配置文件不存在，请检查")
+    # 删除卡面别名
+    with open(rf"{temp_path}/cardnn.json", "r", encoding="utf-8") as f:
+        card_name_dict = json.load(f)
+    try:
+        for chara in card_name_dict:
+            cardnn_dic = chara["cardnn"]
+            #遍历字典中的value，判断是否为card_id
+            for key, value in cardnn_dic.items():
+                if value == str(card_id) and key == card_name.lower():
+                    del chara["cardnn"][key]
+                    break
+        with open(rf"{temp_path}/cardnn.json", "w", encoding="utf-8") as f:
+            json.dump(card_name_dict, f, ensure_ascii=False, indent=4)
+        return FuncResponse(0, "卡面别名删除成功")
+    except:
+        return FuncResponse(1, "卡面别名删除失败，请检查")
