@@ -475,7 +475,7 @@ def delete_card_cache(charaid: int) -> FuncResponse:
             if file.startswith(str(charaid)):
                 os.remove(rf"{temp_path}/card_membercollect_temp/{file}")
                 return FuncResponse(0, "删除成功")
-            return FuncResponse(1, "缓存中没有该角色的卡面略缩图")
+        return FuncResponse(1, "缓存中没有该角色的卡面略缩图")
     except Exception as e:
         return FuncResponse(1, e)
 
