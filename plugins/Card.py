@@ -19,6 +19,7 @@ async def findcard(session: CommandSession):
     if input == "":
         input = "knd"
     chara_id = GetPjskCard.charaName2charaID(input)
+    # 按角色查
     if chara_id:
         response = GetPjskCard.get_membercollect(chara_id)
         if response.response_code == 0:
@@ -29,8 +30,16 @@ async def findcard(session: CommandSession):
             await session.send(
                 f"[CQ:reply,id={session.event.message_id}]查询失败：{response.response_data}"
             )
+    # 按卡名查
     else:
-        await session.send(f"[CQ:reply,id={session.event.message_id}]未找到角色")
+        response = GetPjskCard.create_cardcollect_by_cardnn(input)
+        if response.response_code == 0:
+            message = f"[CQ:reply,id={session.event.message_id}][CQ:image,file=file:///{response.response_data}]"
+            await session.send(message)
+        else:
+            await session.send(
+                f"[CQ:reply,id={session.event.message_id}]查询失败：{response.response_data}"
+            )
 
 
 # 删除略缩图缓存
@@ -210,7 +219,7 @@ async def cardnn(session: CommandSession):
 
 
 # "卡"通配
-@on_command("卡", only_to_me=False)
+@on_command("卡", aliases=("卡面"), only_to_me=False)
 async def card_any(session: CommandSession):
     input = session.current_arg_text.strip()
     if input:

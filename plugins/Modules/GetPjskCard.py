@@ -1,3 +1,4 @@
+import datetime
 import requests
 import json
 import os
@@ -183,7 +184,8 @@ def add_charann(chara_name: str, chara_nn: str) -> FuncResponse:
         json.dump(charann_dic, f, ensure_ascii=False, indent=4)
     return FuncResponse(0, "角色昵称添加成功")
 
-#查看角色昵称
+
+# 查看角色昵称
 def get_charann(chara_name: str) -> FuncResponse:
     # 检查角色昵称id配置表是否存在
     if not os.path.exists(rf"{temp_path}/charann.json"):
@@ -202,7 +204,8 @@ def get_charann(chara_name: str) -> FuncResponse:
             charann_list.append(key)
     return FuncResponse(0, charann_list)
 
-#删除角色昵称
+
+# 删除角色昵称
 def delete_charann(chara_name: str) -> FuncResponse:
     # 检查角色昵称id配置表是否存在
     if not os.path.exists(rf"{temp_path}/charann.json"):
@@ -220,6 +223,7 @@ def delete_charann(chara_name: str) -> FuncResponse:
     with open(rf"{temp_path}/charann.json", "w", encoding="utf-8") as f:
         json.dump(charann, f, ensure_ascii=False, indent=4)
     return FuncResponse(0, "角色昵称删除成功")
+
 
 # 请求卡面大图
 def get_card_fullsize(card_id: int) -> FuncResponse:
@@ -332,7 +336,6 @@ def create_membercollect(charaid: int) -> FuncResponse:
     # 创建图片
     count = 0
     pic = Image.new("RGB", (1500, 8000), (235, 235, 235))
-    json_path = "./cards.json"
     # 绘制略缩图
     for card in cards:
         if card["characterId"] == charaid:
@@ -341,9 +344,71 @@ def create_membercollect(charaid: int) -> FuncResponse:
             count += 1
             pic.paste(single, pos)
     pic = pic.crop((0, 0, 1500, (int((count - 1) / 3) + 1) * 310 + 60))
-    # 绘制右下角水印
+    # 绘制水印
+    pic = create_collect_watermark(pic)
+    # 保存图片
+    save_path = rf"{temp_path}/card_membercollect_temp/{charaid}_{count}.png"
+    pic.save(save_path)
+    return FuncResponse(0, save_path)
+
+
+# 按别名创建略缩图
+def create_cardcollect_by_cardnn(cardnn: str) -> FuncResponse:
+    global temp_path
+    # 检查卡面数据配置文件和卡面id配置文件是否存在
+    if not os.path.exists(rf"{temp_path}/cards.json") or not os.path.exists(
+        rf"{temp_path}/cardnn.json"
+    ):
+        return FuncResponse(1, "卡面数据或卡面id配置文件不存在，请先更新卡面数据")
+    # 读取卡面id配置文件
+    with open(rf"{temp_path}/cardnn.json", "r", encoding="utf-8") as f:
+        cardnn_dic = json.load(f)
+    # 遍历查找卡面id
+    card_id_list = []
+    for chara in cardnn_dic:
+        chara_card = chara["cardnn"]
+        try:
+            card_id_list.append(int(chara_card[cardnn.lower()]))
+        except KeyError:
+            pass
+    # 创建卡面略缩图
+    count = 0
+    pic = Image.new("RGB", (1500, 8000), (235, 235, 235))
+    # 绘制略缩图
+    with open(rf"{temp_path}/cards.json", "r", encoding="utf-8") as f:
+        cards = json.load(f)
+    for card in cards:
+        if card["id"] in card_id_list:
+            single = create_single(card)
+            pos = (int(70 + count % 3 * 470), int(count / 3) * 310 + 60)
+            count += 1
+            pic.paste(single, pos)
+    pic = pic.crop((0, 0, 1500, (int((count - 1) / 3) + 1) * 310 + 60))
+    # 绘制水印
+    pic = create_collect_watermark(pic)
+    # 保存图片
+    save_path = rf"{temp_path}/card_membercollect_temp/{cardnn.lower()}.png"
+    pic.save(save_path)
+    return FuncResponse(0, os.path.abspath(save_path))
+
+
+# 略缩图绘制左下角创建时间和水印
+def create_collect_watermark(pic: Image) -> Image:
     font = ImageFont.truetype("C:/Windows/Fonts/simsun.ttc", 28)
     image_width, image_height = pic.size
+    # 绘制左下角时间
+    text_width, text_height = font.getsize(
+        f"create time:{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    )
+    text_coordinate = (10, image_height - text_height - 10)
+    draw = ImageDraw.Draw(pic)
+    draw.text(
+        text_coordinate,
+        f"create time:{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        "#505050",
+        font,
+    )
+    # 绘制右下角水印
     text_width, text_height = font.getsize(f"create by KanadeBot(Github@Freeman-fan")
     text_coordinate = (
         (image_width - text_width - 20),
@@ -353,10 +418,7 @@ def create_membercollect(charaid: int) -> FuncResponse:
     draw.text(
         text_coordinate, f"create by KanadeBot(Github@Freeman-fan)", "#505050", font
     )
-    # 保存图片
-    save_path = rf"{temp_path}/card_membercollect_temp/{charaid}_{count}.png"
-    pic.save(save_path)
-    return FuncResponse(0, save_path)
+    return pic
 
 
 # 创建角色略缩图_活动小图
@@ -535,7 +597,7 @@ def add_card_name(chara_id: int, card_id: str, card_name: str) -> FuncResponse:
         return FuncResponse(1, "卡面别名添加失败，请检查")
 
 
-#查看卡面别名
+# 查看卡面别名
 def get_card_name(card_id: str) -> FuncResponse:
     global temp_path
     # 检查卡面别名配置文件是否存在
@@ -548,7 +610,7 @@ def get_card_name(card_id: str) -> FuncResponse:
     try:
         for chara in card_name_dict:
             cardnn_dic = chara["cardnn"]
-            #遍历字典中的value，判断是否为card_id
+            # 遍历字典中的value，判断是否为card_id
             for key, value in cardnn_dic.items():
                 if value == str(card_id):
                     cardnn_list.append(key)
@@ -558,9 +620,9 @@ def get_card_name(card_id: str) -> FuncResponse:
             return FuncResponse(1, "该卡面没有别名")
     except:
         return FuncResponse(1, "卡面别名查看失败，请检查")
-    
 
-#删除卡面别名
+
+# 删除卡面别名
 def delete_card_name(card_id: str, card_name: str) -> FuncResponse:
     global temp_path
     # 检查卡面别名配置文件是否存在
@@ -572,7 +634,7 @@ def delete_card_name(card_id: str, card_name: str) -> FuncResponse:
     try:
         for chara in card_name_dict:
             cardnn_dic = chara["cardnn"]
-            #遍历字典中的value，判断是否为card_id
+            # 遍历字典中的value，判断是否为card_id
             for key, value in cardnn_dic.items():
                 if value == str(card_id) and key == card_name.lower():
                     del chara["cardnn"][key]
