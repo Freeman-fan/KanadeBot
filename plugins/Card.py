@@ -42,6 +42,31 @@ async def findcard(session: CommandSession):
             )
 
 
+# 根据id创建略缩图
+@on_command("createcard", aliases=("创建卡册"), only_to_me=False)
+async def createcard(session: CommandSession):
+    input = session.current_arg_text.strip()
+    if input:
+        try:
+            card_list = input.split()
+            # 将list的值转为int类型
+            card_id_list = [int(card_id) for card_id in card_list]
+            response = GetPjskCard.create_cardcollect_by_cardid(card_id_list)
+            if response.response_code == 0:
+                message = f"[CQ:reply,id={session.event.message_id}][CQ:image,file=file:///{response.response_data}]"
+                await session.send(message)
+            else:
+                await session.send(
+                    f"[CQ:reply,id={session.event.message_id}]创建失败：{response.response_data}"
+                )
+        except:
+            await session.send(
+                f"[CQ:reply,id={session.event.message_id}]输入格式错误，请按照格式输入：卡片id1 卡片id2..."
+            )
+    else:
+        await session.send(f"[CQ:reply,id={session.event.message_id}]请输入卡片id")
+
+
 # 删除略缩图缓存
 @on_command("delcardcache", only_to_me=False)
 async def delcardcache(session: CommandSession):

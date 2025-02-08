@@ -371,7 +371,7 @@ def create_cardcollect_by_cardnn(cardnn: str) -> FuncResponse:
             card_id_list.append(int(chara_card[cardnn.lower()]))
         except KeyError:
             pass
-    # 创建卡面略缩图
+    # 创建画布
     count = 0
     pic = Image.new("RGB", (1500, 8000), (235, 235, 235))
     # 绘制略缩图
@@ -387,10 +387,41 @@ def create_cardcollect_by_cardnn(cardnn: str) -> FuncResponse:
     # 绘制水印
     pic = create_collect_watermark(pic)
     # 保存图片
+    if count == 0:
+        return FuncResponse(1, "无匹配卡面，请检查")
     save_path = rf"{temp_path}/card_membercollect_temp/{cardnn.lower()}.png"
     pic.save(save_path)
     return FuncResponse(0, os.path.abspath(save_path))
 
+#根据卡面id创建略缩图
+def create_cardcollect_by_cardid(cardid: list) -> FuncResponse:
+    global temp_path
+    # 检查卡面数据配置文件是否存在
+    if not os.path.exists(rf"{temp_path}/cards.json"):
+        return FuncResponse(1, "卡面数据不存在，请先更新卡面数据")
+    # 创建画布
+    count = 0
+    pic = Image.new("RGB", (1500, 8000), (235, 235, 235))
+    # 绘制略缩图
+    with open(rf"{temp_path}/cards.json", "r", encoding="utf-8") as f:
+        cards = json.load(f)
+    for card in cards:
+        if card["id"] in cardid:
+            single = create_single(card)
+            pos = (int(70 + count % 3 * 470), int(count / 3) * 310 + 60)
+            count += 1
+            pic.paste(single, pos)
+    pic = pic.crop((0, 0, 1500, (int((count - 1) / 3) + 1) * 310 + 60))
+    # 绘制水印
+    pic = create_collect_watermark(pic)
+    # 保存图片
+    if count == 0:
+        return FuncResponse(1, "无匹配卡面，请检查")
+    save_path = rf"{temp_path}/card_membercollect_temp/cardcollect.png"
+    pic.save(save_path)
+    return FuncResponse(0, os.path.abspath(save_path))
+
+    
 
 # 略缩图绘制左下角创建时间和水印
 def create_collect_watermark(pic: Image) -> Image:
