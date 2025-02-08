@@ -4,6 +4,7 @@ import nonebot
 import os
 import re
 import time
+import mercapi
 
 from plugins.Modules.GetMerItem import GetMerItem
 from plugins.Modules.CreateForwardMsg import ForwardMsg
@@ -46,6 +47,13 @@ async def MerGood(session: CommandSession):
                     photo_url = f"https://image03.doorzo.net/item/detail/orig/photos/{mNum}_{index+1}.jpg"
                     photo_cq = f"[CQ:image,file={photo_url}]"
                     text = text + photo_cq
+                #检查拍卖
+                m =  mercapi.Mercapi(proxies="socks5://127.0.0.1:1088")
+                item = await m.item(mNum)
+                #如果created和updated不同，则认定为拍卖
+                if item.created != item.updated:
+                    text = "!!拍卖商品!!\n" + text
+
             elif MerItem.response_code == 1:
                 text = MerItem.response_data
         else:
