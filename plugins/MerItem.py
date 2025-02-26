@@ -23,10 +23,10 @@ async def MerGood(session: CommandSession):
         if mNum:
             MerItem = await GetMerItem(mNum=mNum)
             if MerItem.response_code == 0:
-                k_price = int(MerItem.product_price) * 0.052
                 text = f"{MerItem.product_id}\n{MerItem.product_name}\n"
                 if MerItem.postage_payment == 1:
                     text += f"【此商品为到付件！】\n"
+                k_price = int(MerItem.product_price) * 0.052
                 text += f"{MerItem.product_price:.0f}y  人工{k_price:.2f}r  机切{MerItem.product_price_cny}r\n"
                 text += f"状态：{'在售' if MerItem.product_status == 1 else '已售出'}"
                 message = message.split()

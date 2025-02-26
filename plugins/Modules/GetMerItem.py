@@ -34,31 +34,9 @@ def get_maeitem(mNum: str) -> json:
     # 请求URL
     url = "https://www.maetown.cn/api/web/search/goods/detail"
 
-    # 请求头
-    headers = {
-        "Accept": "*/*",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6,ja;q=0.5",
-        "Authorization": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpbjp1c2VyOmtleSI6IjFhNDQ3MWNkNTg4ZTEwMDAifQ.a0r00aY_0ov3C6JedRiwT",
-        "Cache-Control": "no-cache",
-        "Channel": "3",
-        "Content-Type": "application/json",
-        "Cookie": "Hm_lvt_11995333e9a8ad827efcd37d5599c8f8=1738728592,1739624818,1740104701,1740480623",
-        "Origin": "https://www.maetown.cn",
-        "Platform": "104",
-        "Pragma": "no-cache",
-        "Priority": "u=1,i",
-        "Referer": "https://www.maetown.cn/wap/",
-        "Sec-Ch-Ua": '"Not(A:Brand";v="99","Microsoft Edge";v="133","Chromium";v="133"',
-        "Sec-Ch-Ua-Mobile": "70",
-        "Sec-Ch-Ua-Platform": '"Windows"',
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-origin",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0",
-        "Version": "145",
-        "Zoneid": "Asia/Shanghai",
-    }
+    # 读取请求头
+    with open(".\plugins\Config\maeheader.json", "r", encoding="utf-8") as f:
+        headers = json.load(f)
 
     # 请求体
     data = {"goodsId": mNum, "platformCode": "101"}
@@ -100,7 +78,7 @@ async def GetMerItem(mNum: str):
             message = comment.get("content")
             time = comment.get("createTime")
             if user_name == seller_name:
-                user_name = '【卖家】'+user_name
+                user_name = "【卖家】" + user_name
             comment_add = [user_name, message, time]
             comment_list.append(comment_add)
 

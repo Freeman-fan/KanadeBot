@@ -222,6 +222,7 @@ class GetMerUpdate:
             if result:
                 updateGroup = []
                 for item in result:
+                    # item索引: mNum, name, jpprice, status, commentNum, id
                     mNum = item[0]
                     merItem = await GetMerItem(mNum=mNum)
                     if merItem.response_code == 1:
@@ -234,19 +235,22 @@ class GetMerUpdate:
                             cur.execute("DELETE FROM items WHERE mNum = ?", (mNum,))
                             self.conn.commit()
                     else:
+                        #商品名变动
                         if item[1] != merItem.product_name:
                             updateResponse = UpdateResponse(
                                 1, mNum, item[1], merItem.product_name, item[5]
                             )
                             updateGroup.append(updateResponse)
                             self.UpdataItem(mNum, "name", merItem.product_name)
+                        # 价格变动
                         elif item[2] != merItem.product_price:
                             updateResponse = UpdateResponse(
                                 2, mNum, item[2], int(merItem.product_price), item[5]
                             )
                             updateGroup.append(updateResponse)
                             self.UpdataItem(mNum, "jpprice", merItem.product_price)
-                        elif merItem.product_status != 'on_sale':
+                        # 状态变动
+                        elif merItem.product_status != 1:
                             updateResponse = UpdateResponse(
                                 3, mNum, None, None, item[5]
                             )
@@ -254,6 +258,7 @@ class GetMerUpdate:
                             # 状态变动唯一可能就是售出，因此直接删除
                             cur.execute("DELETE FROM items WHERE mNum = ?", (mNum,))
                             self.conn.commit()
+                        # 评论变动
                         elif item[4] != len(merItem.comment_list):
                             updateResponse = UpdateResponse(
                                 4, mNum, None, merItem.comment_list[0], item[5]
